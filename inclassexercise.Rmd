@@ -1,0 +1,10 @@
+---
+title: "inclassexrecise"
+output: html_document
+---
+
+```{r}
+histloansdata = read.delim('ClassifyRisk_historical.CSV', sep = ',')
+histloansdata
+```
+

@@ -1,0 +1,115 @@
+---
+title: "decisiontree"
+author: "Ragav"
+date: "May 9, 2018"
+output: html_document
+---
+```{r}
+#Load the package tree
+library(tree)
+```
+
+```{r}
+#Load input
+setwd('C:/Users/chinn/Desktop/Spring 18/Data mining/Week 13/HW')
+Loandata = read.csv('ClassifyRisk_historical.csv')
+library(ggplot2)
+
+```
+
+```{r}
+#Generic function created to reuse for normalizing the variables
+normalize<-function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+```
+
+```{r}
+#Assign input and label
+input=Loandata[,c('age','income','loans')]
+input.norm<-sapply(input, normalize) # Normalize the input
+label<-Loandata$risk 
+```
+
+```{r}
+# Split training and test data
+set.seed(1234) 
+indicies=sample(1:2,length(Loandata$risk), replace = T, prob=c(.8,.2))
+indicies
+## Data Split
+train_data=input.norm[indicies==1, ]
+train_labels=label[indicies==1]
+test_data=input.norm[indicies==2,]
+test_labels=label[indicies==2]
+```
+
+```{r}
+test_data<-data.frame(test_data, test_labels)
+head(test_data)
+
+train_data<-data.frame(train_data, train_labels)
+head(train_data)
+
+```
+
+```{r}
+require('tree')
+# Implementing the model decision tree
+my.model<-tree(train_labels~age+income+loans, data=train_data)
+
+summary(my.model)
+
+plot(my.model) # both should run together
+text(my.model)
+
+```
+
+```{r}
+my.predictions=predict(my.model, test_data, type='class')
+my.predictions
+```
+
+```{r}
+test_data$test_labels
+
+```
+
+
+```{r}
+results=data.frame(my.predictions,test_data$test_labels )
+results
+table(results)
+
+accuracy=sum(my.predictions==test_labels)/length(my.predictions) 
+accuracy
+```
+
+```{r}
+require(tree) # cross validation
+cv_tree=cv.tree(my.model, FUN=prune.misclass)
+names(cv_tree)
+
+```
+
+```{r}
+plot( cv_tree$size, cv_tree$dev , type='b')
+
+```
+
+```{r}
+pruned.model<-prune.misclass(my.model, best=2)
+plot(pruned.model)
+text(pruned.model)
+
+```
+
+```{r}
+pruned.predictions<-predict(pruned.model, test_data, type='class')
+table(pruned.predictions, test_data$test_labels)
+
+```
+```{r}
+accuracy=sum(pruned.predictions==test_labels)/length(pruned.predictions) 
+accuracy
+```
+

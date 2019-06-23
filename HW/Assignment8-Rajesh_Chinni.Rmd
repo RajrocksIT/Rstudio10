@@ -1,0 +1,163 @@
+---
+title: "Assignment8"
+author: "Rajesh_Chinni-Stormtrooper"
+date: "May 3, 2018"
+output: html_document
+---
+```{r}
+# Using Numerical Values and Predicting the risk
+require(class)
+Loandata = read.csv('ClassifyRisk_historical.csv')
+require(ggplot2)
+
+normalize<-function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+
+input=Loandata[,c('age','income','loans')]
+input.norm<-sapply(input, normalize)
+
+label<-Loandata$risk
+set.seed(1234)
+
+indicies=sample(1:2,length(Loandata$risk), replace = T, prob=c(.8,.2))
+indicies
+
+training.input=input.norm[indicies==1, ]
+training.input
+training.label=label[indicies==1]
+training.label
+testing.input=input.norm[indicies==2,]
+testing.input
+testing.label=label[indicies==2]
+testing.label
+
+require(class)
+set.seed(1234)
+predicted.label<-knn(train=training.input, cl=training.label, test=testing.input, k=4)
+predicted.label
+
+data.frame(predicted.label, testing.label)
+
+sum(predicted.label==testing.label)/length(testing.label)
+
+prop.table(table(Loandata$risk))
+
+table(predicted.label,testing.label)
+
+accuracy=sum(predicted.label==testing.label)/length(predicted.label) 
+accuracy
+```
+
+```{r}
+#Updating the Model to Include Categorical values for predicting the results
+
+require(class)
+require(ggplot2)
+
+normalize<-function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+
+table(Loandata$mortgage)
+class_dummies=model.matrix( ~mortgage - 1, data=Loandata) 
+head(class_dummies)
+
+table(Loandata$marital_status)
+class_dummies1=model.matrix( ~marital_status -1, data=Loandata) 
+head(class_dummies1)
+
+
+input= subset(Loandata, select=c(age,income,loans)) 
+input = data.frame(input,class_dummies)
+input = data.frame(input,class_dummies1)
+input
+
+
+input.norm<-sapply(input, normalize)
+input.norm
+
+label<-Loandata$risk
+set.seed(1234)
+
+indicies=sample(1:2,length(Loandata$risk), replace = T, prob=c(.8,.2))
+
+
+training.input=input.norm[indicies==1, ]
+training.input
+training.label=label[indicies==1]
+training.label
+testing.input=input.norm[indicies==2,]
+testing.input
+testing.label=label[indicies==2]
+testing.label
+require(class)
+
+set.seed(1234)
+predicted.label<-knn(train=training.input, cl=training.label, test=testing.input, k=1)
+predicted.label
+
+data.frame(predicted.label, testing.label)
+
+sum(predicted.label==testing.label)/length(testing.label)
+
+prop.table(table(Loandata$risk))
+
+table(predicted.label,testing.label)
+
+accuracy=sum(predicted.label==testing.label)/length(predicted.label) 
+accuracy
+```
+
+```{r}
+
+# The accuracy is 95% with numeric variables and 87% with both numeric and categorical variables. Therefore, we choose only numeric variables to predict the risk type for the applications in 'classifyrisk.csv'.
+
+require(class)
+require(ggplot2)
+
+normalize<-function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+
+input=Loandata[,c('age','income','loans')]
+input.norm<-sapply(input, normalize)
+label<-Loandata$risk
+
+Loandata1 = read.csv('classifyrisk.csv')
+
+testinput=Loandata1[,c('age','income','loans')]
+testinput.norm<-sapply(testinput, normalize)
+label1=Loandata1$risk
+
+
+#set.seed(1234)
+
+#indicies=sample(1:2,length(Loandata$risk), replace = T, prob=c(.8,.2))
+
+
+training.input=input.norm
+
+training.label=label
+
+testing.input=testinput.norm
+
+testing.label=label1
+
+require(class)
+
+predicted.label<-knn(train=training.input, cl=training.label, test=testing.input, k=4)
+predicted.label
+risk1 = predicted.label
+classifyrisk=subset(Loandata1,select = -risk)
+classifyrisk = cbind(classifyrisk, risk1)
+classifyrisk
+sum(is.na(classifyrisk))
+write.csv(classifyrisk, 'C:/Users/chinn/Desktop/Spring 18/Data mining/Week 13/HW/newoutput/classifyrisk.csv',row.names = F)
+#write.csv(classifyrisk, 'C:/Users/Honeywell/Documents/RMarkdown/output/classifyrisk.csv',row.names = F)
+#C:/Users/chinn/Desktop/Spring 18/Data mining/Week 13/HW/newoutput/classifyrisk.csv
+
+
+```
+
+
